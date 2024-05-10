@@ -1,0 +1,30 @@
+---
+- name: Update keys in /root/.ssh/authorized_keys # tested on Oracle Linux 9; Ubuntu 22.04; Debian 12.
+  hosts: all
+  remote_user: root
+  become: yes
+  vars:
+    # ansible_ssh_pass: 123456 # if there is no ssh key access to managed node
+  
+  tasks:
+
+    - name: Gather current keys from authorized_keys file of remote host
+      shell: cat /root/.ssh/authorized_keys
+      register: current_keys
+      changed_when: false
+
+    - name: Add keys from root_users.yml to authorized_keys file of remote host
+      authorized_key:
+        user: root
+        key: "{{ item }}"
+        state: present
+      with_lines:
+        - cat ./root_users.yml
+
+    - name: Remove keys (!!!) not present in root_users.yml
+      authorized_key:
+        user: root
+        key: "{{ item }}"
+        state: absent
+      with_items: "{{ current_keys.stdout_lines }}"
+      when: item not in lookup('file', './root_users.yml').split('\n')

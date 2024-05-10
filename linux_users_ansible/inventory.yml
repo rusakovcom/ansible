@@ -1,0 +1,11 @@
+all:
+  hosts:
+    managed1:
+      ansible_host: <IP1>
+    managed2:
+      ansible_host: <IP2>
+    managed3:
+      ansible_host: <IP3>
+
+# example how to run
+# ansible-playbook -i inventory.yml -l managed1 playbook.yml

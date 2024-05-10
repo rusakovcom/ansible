@@ -1,0 +1,15 @@
+users_to_create:
+
+  - name: user1
+    groups:
+      - wheel
+      - docker
+    ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK/7IeGQUbR5k9pKgw8S06yoQI0LQVbEsBk3n6StNNat user1@example.com"
+    password: "$6$S4cXMgfl8vLqrasT$loA9MLaHE0AzGJ36bHVqmYIRInaJZj3xTn2gvPXS5ArC/w6IZX70PKushxrxoT5k/XIQEZVmVkJZ4fRFncUpY1"
+
+  - name: user2
+    groups:
+      - wheel
+      - docker
+    ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK/7IeGQUbR5k9pKgw8S06yoQI0LQVbEsBk3n6StNNat user@example.com"
+    password: "$6$MRyO1e.KdTzAvOwc$MZlk6klyDyE4v7a3uYDLK6EHx2nL9tbACMhCBEaroGyDJtTA7Hdbu/FeuPYaYirZJed2foyr4HqSFqcJn6PjJ1"

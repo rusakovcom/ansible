@@ -1,0 +1,32 @@
+---
+- name: Create users with SSH keys and add them to groups
+  hosts: all
+  remote_user: root
+  become: yes
+  vars:
+    # ansible_ssh_pass: 123456 # if there is no ssh key access to managed node
+  vars_files:
+    - users.yml
+
+  tasks:
+
+    - name: Create users
+      user:
+        name: "{{ item.name }}"
+        groups: "{{ item.groups }}"
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ item.password }}"
+      with_items: "{{ users_to_create }}"
+
+    - name: Add SSH keys for users
+      authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ item.ssh_key }}"
+      with_items: "{{ users_to_create }}"
+
+    #   Needs testing
+    # - name: Remove users not defined in users.yml
+    #   shell: userdel -r "{{ item.name }}"
+    #   with_items: "{{ ansible_users|difference(users_to_create|map(attribute='name')|list) }}"
+    #   ignore_errors: yes
