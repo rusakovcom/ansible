@@ -1,0 +1,62 @@
+- name: Check hosts state
+  hosts: all
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks:
+
+    # DISK-SPACE
+    
+    - name: Gather disk space information
+      command: df -h /
+      register: disk_space
+      tags:
+        - disk-space
+
+    - name: Display disk space information
+      debug:
+        var: disk_space.stdout_lines
+      tags:
+        - disk-space
+
+    # WEB-SERVER
+
+    - name: Check response of localhost web server on port 443
+      uri:
+        url: https://localhost:443
+        validate_certs: no
+        return_content: no
+      register: result
+      tags:
+        - web-server
+
+    - name: Print response status code
+      debug:
+        msg: "Response status code: {{ result.status }}"
+      tags:
+        - web-server
+
+    # DOCKER
+
+    - name: Count Docker containers currently running
+      shell: docker ps -a | grep Up | wc -l
+      register: docker_running_count
+      changed_when: false
+      check_mode: no
+      tags:
+        - docker
+    - debug:
+        msg: "Number of Docker containers currently running: {{ docker_running_count.stdout }}"
+      tags:
+        - docker
+
+    - name: Get Docker container status and state
+      shell: docker ps -a --format "table {{'{{'}}.Names{{'}}'}}\t{{'{{'}}.Status{{'}}'}}\t{{'{{'}}.State{{'}}'}}" | grep -v "Up"
+      register: docker_ps_output
+      changed_when: false
+      check_mode: no
+      tags:
+        - docker
+    - debug:
+        msg: "{{ docker_ps_output.stdout_lines }}"
+      tags:
+        - docker

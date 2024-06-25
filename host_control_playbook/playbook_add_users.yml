@@ -1,0 +1,27 @@
+- name: Add users from users.yml
+  hosts: all
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  vars_files:
+    - users.yml
+  tasks:
+
+    - name: Create users
+      user:
+        name: "{{ item.name }}"
+        groups: "{{ item.groups }}"
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ item.password }}"
+      with_items: "{{ users_to_create }}"
+      tags:
+        - add_users
+
+    - name: Add SSH keys for users
+      authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ item.ssh_key }}"
+      with_items: "{{ users_to_create }}"
+      tags:
+        - add_users
+
