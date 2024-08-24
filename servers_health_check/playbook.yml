@@ -1,0 +1,156 @@
+- name: Check hosts state
+  hosts: all
+  tasks:
+
+    # DISK-SPACE
+
+    - name: Gather disk space information
+      command: df -h /
+      register: disk_space
+      tags:
+        - disk
+
+    - name: Display disk space root / file system
+      debug:
+        var: disk_space.stdout_lines
+      tags:
+        - disk
+
+    - name: Get size of /var/lib/docker/overlay2/
+      command: du -sh /var/lib/docker/overlay2/
+      register: docker_overlay2_size
+      tags:
+        - disk
+
+    - name: Print size of /var/lib/docker/overlay2/
+      debug:
+        msg: "Size of /var/lib/docker/overlay2/: {{ docker_overlay2_size.stdout.split()[0] }}"
+      tags:
+        - disk
+
+    - name: Get size of /data/postgres/pgdata/pgroot/data/pg_wal/
+      command: du -sh /data/postgres/pgdata/pgroot/data/pg_wal/
+      register: pg_wal_size
+      tags:
+        - disk
+
+    - name: Print size of /data/postgres/pgdata/pgroot/data/pg_wal/
+      debug:
+        msg: "Size of /data/postgres/pgdata/pgroot/data/pg_wal/: {{ pg_wal_size.stdout.split()[0] }}"
+      tags:
+        - disk
+
+    # RESOURCES CPU, RAM, SWAP
+
+    - name: Get number of CPU cores
+      debug:
+        msg: "Number of CPU cores: {{ ansible_processor_cores }}"
+      tags:
+        - resources
+
+    - name: Get total RAM in GB
+      debug:
+        msg: "Total RAM: {{ (ansible_memtotal_mb / 1024) | round(2) }} GB"
+      tags:
+        - resources
+
+    - name: Get total swap space in GB
+      debug:
+        msg: "Total swap space: {{ (ansible_swaptotal_mb / 1024) | round(2) }} GB"
+      tags:
+        - resources
+
+    - name: Get current CPU usage
+      shell: "top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}'"
+      register: cpu_usage
+      tags:
+        - resources
+
+    - name: Print current CPU usage
+      debug:
+        msg: "Current CPU usage: {{ cpu_usage.stdout }}%"
+      tags:
+        - resources
+
+    - name: Get current RAM usage
+      shell: "free | grep Mem | awk '{print $3/$2 * 100.0}'"
+      register: ram_usage
+      tags:
+        - resources
+
+    - name: Print current RAM usage
+      debug:
+        msg: "Current RAM usage: {{ ram_usage.stdout | float | round(2) }}%"
+      tags:
+        - resources
+
+    - name: Check system uptime
+      shell: uptime
+      register: uptime_result
+      tags:
+        - resources
+
+    - name: Display uptime
+      debug:
+        msg: "System uptime: {{ uptime_result.stdout }}"
+      tags:
+        - resources
+      
+    # WEB-SERVER
+
+    - name: Check response of localhost web server on port 443
+      uri:
+        url: https://localhost:443
+        validate_certs: no
+        return_content: no
+      register: result
+      tags:
+        - web-server
+
+    - name: Print response status code
+      debug:
+        msg: "Response status code: {{ result.status }}"
+      tags:
+        - web-server
+
+    - name: Retrieve SSL certificate details
+      shell: "echo | openssl s_client -connect localhost:443 2>/dev/null | openssl x509 -noout -dates -subject"
+      register: cert_info
+      tags:
+        - web-server
+
+    - name: Display raw certificate information
+      debug:
+        var: cert_info.stdout
+      tags:
+        - web-server
+
+    # DOCKER
+
+    - name: Count Docker containers currently running
+      shell: docker ps -a | grep Up | wc -l
+      register: docker_running_count
+      changed_when: false
+      check_mode: no
+      tags:
+        - docker
+    - debug:
+        msg: "Number of Docker containers currently running: {{ docker_running_count.stdout }}"
+      tags:
+        - docker
+
+    - name: List Docker containers not running
+      shell: |
+        {% raw %}
+        docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.State}}" | grep -v "Up"
+        {% endraw %}
+      register: docker_output
+      tags:
+        - docker
+
+    - name: Display Docker containers output
+      debug:
+        var: docker_output.stdout_lines
+      when: docker_output.stdout_lines | length > 0
+      tags:
+        - docker
