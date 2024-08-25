@@ -1,0 +1,53 @@
+- name: Get number of CPU cores
+  debug:
+    msg: "Number of CPU cores: {{ ansible_processor_cores }}"
+  tags:
+    - resources
+
+- name: Get total RAM in GB
+  debug:
+    msg: "Total RAM: {{ (ansible_memtotal_mb / 1024) | round(2) }} GB"
+  tags:
+    - resources
+
+- name: Get total swap space in GB
+  debug:
+    msg: "Total swap space: {{ (ansible_swaptotal_mb / 1024) | round(2) }} GB"
+  tags:
+    - resources
+
+- name: Get current CPU usage
+  shell: "top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}'"
+  register: cpu_usage
+  tags:
+    - resources
+
+- name: Print current CPU usage
+  debug:
+    msg: "Current CPU usage: {{ cpu_usage.stdout }}%"
+  tags:
+    - resources
+
+- name: Get current RAM usage
+  shell: "free | grep Mem | awk '{print $3/$2 * 100.0}'"
+  register: ram_usage
+  tags:
+    - resources
+
+- name: Print current RAM usage
+  debug:
+    msg: "Current RAM usage: {{ ram_usage.stdout | float | round(2) }}%"
+  tags:
+    - resources
+
+- name: Check system uptime
+  shell: uptime
+  register: uptime_result
+  tags:
+    - resources
+
+- name: Display uptime
+  debug:
+    msg: "System uptime: {{ uptime_result.stdout }}"
+  tags:
+    - resources

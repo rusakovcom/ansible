@@ -1,0 +1,27 @@
+- name: Count Docker containers currently running
+  shell: docker ps -a | grep Up | wc -l
+  register: docker_running_count
+  changed_when: false
+  check_mode: no
+  tags:
+    - docker
+- debug:
+    msg: "Number of Docker containers currently running: {{ docker_running_count.stdout }}"
+  tags:
+    - docker
+
+- name: List Docker containers not running
+  shell: |
+    {% raw %}
+    docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.State}}" | grep -v "Up"
+    {% endraw %}
+  register: docker_output
+  tags:
+    - docker
+
+- name: Display Docker containers output
+  debug:
+    var: docker_output.stdout_lines
+  when: docker_output.stdout_lines | length > 0
+  tags:
+    - docker

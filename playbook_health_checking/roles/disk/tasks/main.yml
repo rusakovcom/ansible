@@ -1,0 +1,35 @@
+- name: Gather disk space information
+  command: df -h /
+  register: disk_space
+  tags:
+    - disk
+
+- name: Display disk space root / file system
+  debug:
+    var: disk_space.stdout_lines
+  tags:
+    - disk
+
+- name: Get size of /var/lib/docker/overlay2/
+  command: du -sh /var/lib/docker/overlay2/
+  register: docker_overlay2_size
+  tags:
+    - disk
+
+- name: Print size of /var/lib/docker/overlay2/
+  debug:
+    msg: "Size of /var/lib/docker/overlay2/: {{ docker_overlay2_size.stdout.split()[0] }}"
+  tags:
+    - disk
+
+- name: Get size of /data/postgres/pgdata/pgroot/data/pg_wal/
+  command: du -sh /data/postgres/pgdata/pgroot/data/pg_wal/
+  register: pg_wal_size
+  tags:
+    - disk
+
+- name: Print size of /data/postgres/pgdata/pgroot/data/pg_wal/
+  debug:
+    msg: "Size of /data/postgres/pgdata/pgroot/data/pg_wal/: {{ pg_wal_size.stdout.split()[0] }}"
+  tags:
+    - disk
